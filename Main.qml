@@ -29,25 +29,14 @@ Window {
             id: _PlayButton
             sourceSize.height: 42
             sourceSize.width: 42
-            source: "./Icons/play-button.svg"
+            source: _Player._CurrentIconPath
             anchors.centerIn: parent
         }
         MouseArea
         {
             anchors.fill: parent
-            property int _State: 0
             onClicked: {
                 _Player._Play_n_Stop()
-                if (_State === 0)
-                {
-                    _PlayButton.source = "./Icons/pause-button.svg"
-                    _State = 1
-                }
-                else
-                {
-                    _PlayButton.source = "./Icons/play-button.svg"
-                    _State = 0
-                }
             }
         }
         anchors.horizontalCenter: parent.horizontalCenter

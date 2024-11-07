@@ -1,7 +1,7 @@
 #include "MusicPlayer.hpp"
 
 MusicPlayer::MusicPlayer(QObject *parent)
-    : QObject{parent}
+    : QObject{parent}, CurrentIconPath{"./Icons/play-button.svg"}
 {
 
     _AudioOutput = new QAudioOutput;
@@ -14,47 +14,56 @@ MusicPlayer::MusicPlayer(QObject *parent)
         this->Tracks.append(Buffer.substr(Buffer.find('\\') + 1, Buffer.size()).c_str());
         //this->Tracks.push_back(Buffer.substr(Buffer.find("\\", Buffer.size() - 1)));
     }
-    State = 0;
-    SliderPosition = 0.25;
-    Volume  = 50;
-    emit TracksChanged();
-    emit VolumeChanged();
+    fState = States::SongNotStarted;
+    SliderPosition = 0;
+    Volume  = 1;
+    _AudioOutput->setVolume(Volume);
 }
 
 MusicPlayer::~MusicPlayer()
 {
     delete _AudioOutput;
-
 }
 
 void MusicPlayer::_Play_n_Stop()
 {
-    if (State == 0)
+    if (fState == States::SongNotStarted)
     {
         if(_Player.hasAudio() == false)
         {
             qDebug() << "No audio";
             return;
         }
-        _AudioOutput->setVolume(Volume);
         _Player.play();
+        fState = States::SongPlaying;
+        CurrentIconPath = "./Icons/pause-button.svg";
         qDebug() << "Song started playing";
-        State = 2;
+
+
         SliderChecker = std::thread(&MusicPlayer::SetNewSlider, this);
 
+
+        emit IconPathChanged();
+
     }
-    else if (State == 2)
+    else if (fState == States::SongPlaying)
     {
         _Player.pause();
+        fState = States::SongPaused;
         qDebug() << "Song paused";
         qDebug() << _Player.position();
         State = 1;
+        CurrentIconPath = "./Icons/pause-button.svg";
+        emit IconPathChanged();
     }
-    else if (State == 1)
+    else if (fState == States::SongPaused)
     {
         qDebug() << "Song paused" << _Player.position();
         _Player.play();
+        fState = States::SongPlaying;
         State = 2;
+        CurrentIconPath = "./Icons/play-button.svg";
+        emit IconPathChanged();
     }
 
     emit TracksChanged();
@@ -80,6 +89,7 @@ void MusicPlayer::_SetProgress(float NewProgress)
 void MusicPlayer::_ChooseTrack(int Id)
 {
     _Player.stop();
+    fState = States::SongNotStarted;
     State = 0;
     if (SliderChecker.joinable())
     {
@@ -104,7 +114,7 @@ void MusicPlayer::SetNewSlider()
     double MediaDuration {static_cast<double>(_Player.duration())};
     qDebug() << MediaDuration << " - media duration";
     fSliderMutex.lock();
-    for (;State != 0;)
+    for (;fState == States::SongPlaying;)
     {
         long long int Current {_Player.position()};
         qDebug() << "Player.position = " << Current;
@@ -117,6 +127,11 @@ void MusicPlayer::SetNewSlider()
     emit SliderPositionChanged();
     qDebug() << "Slider thread ended";
     fSliderMutex.unlock();
+}
+
+QString MusicPlayer::getCurrentIconPath() const
+{
+    return CurrentIconPath;
 }
 void MusicPlayer::setTracks(const QStringList &newTracks)
 {
