@@ -11,9 +11,18 @@ Window {
     MusicPlayer
     {
         id: _Player
-
-
     }
+    Rectangle
+    {
+        id: _DialogButton
+        color: "#063970"
+        width: 50
+        height: 40
+        radius: 60
+        anchors.left: parent.left
+        anchors.verticalCenter: _Button.verticalCenter
+    }
+
     Rectangle
     {
         id: _Button
@@ -53,13 +62,15 @@ Window {
         height: parent.height
         model: _Player._Tracks
         spacing: -1
+
         delegate:
             Rectangle
             {
                 id: _Deligated
                 border.color: "black"
-                border.width: 1
+                border.width: 1                
                 width: _TrackList.width
+                color: "transparent"
                 height: 60
                 Text {
                     id: _Name
@@ -76,23 +87,25 @@ Window {
                     anchors.fill: parent
                     onClicked:
                     {
+                        _Player._ChooseTrack(index);
                         console.log(index)
-                        _Player._ChooseTrack(index)
+                        console.log("_TrackList.highlightItem ", _TrackList.highlightItem)
+                        _TrackList.currentIndex = index
                     }
                 }
+
             }
+
+        highlight: Rectangle
+        {
+
+            anchors.right: parent.right
+            width: 1
+            color: "lightsteelblue";
+            radius: 5
+        }
     }
-    // Rectangle
-    // {
-    //     id: _ProgressBarBack
-    //     width: parent.width - 20
-    //     height: 30
-    //     anchors.bottom: _Button.top
-    //     anchors.bottomMargin: 10
-    //     anchors.horizontalCenter: parent.horizontalCenter
-    //     border.color: "black"
-    //     border.width: 1
-    // }
+
     Slider
     {
         id: _ProgressSlider

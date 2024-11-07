@@ -1,5 +1,9 @@
 #include "MusicPlayer.hpp"
 
+MusicPlayer::~MusicPlayer()
+{
+    delete _AudioOutput;
+}
 MusicPlayer::MusicPlayer(QObject *parent)
     : QObject{parent}, CurrentIconPath{"./Icons/play-button.svg"}
 {
@@ -18,12 +22,12 @@ MusicPlayer::MusicPlayer(QObject *parent)
     SliderPosition = 0;
     Volume  = 1;
     _AudioOutput->setVolume(Volume);
+    if (Tracks.size() > 0)
+    {
+        _Player.setSource("./Music/" + Tracks[0]);
+    }
 }
 
-MusicPlayer::~MusicPlayer()
-{
-    delete _AudioOutput;
-}
 
 void MusicPlayer::_Play_n_Stop()
 {
@@ -52,61 +56,50 @@ void MusicPlayer::_Play_n_Stop()
         fState = States::SongPaused;
         qDebug() << "Song paused";
         qDebug() << _Player.position();
-        State = 1;
-        CurrentIconPath = "./Icons/pause-button.svg";
+        CurrentIconPath = "./Icons/play-button.svg";
+
         emit IconPathChanged();
+
     }
     else if (fState == States::SongPaused)
     {
-        qDebug() << "Song paused" << _Player.position();
+        qDebug() << "Song continued" << _Player.position();
         _Player.play();
         fState = States::SongPlaying;
-        State = 2;
-        CurrentIconPath = "./Icons/play-button.svg";
+        CurrentIconPath = "./Icons/pause-button.svg";
         emit IconPathChanged();
     }
-
-    emit TracksChanged();
-
 }
 
-void MusicPlayer::_SetVolume(float NewVolume)
-{
-    qDebug() << NewVolume << "New volume";
-    _AudioOutput->setVolume(NewVolume);
-    Volume = NewVolume;
-    emit VolumeChanged();
-}
+
 
 void MusicPlayer::_SetProgress(float NewProgress)
 {
+    _AudioOutput->setVolume(0);
     qDebug() << NewProgress << "New volume";
     double MediaDuration {static_cast<double>(_Player.duration())};
-    _Player.setPosition(NewProgress * MediaDuration);
+    _Player.setPosition(NewProgress * MediaDuration);    
     emit SliderPositionChanged();
+    _AudioOutput->setVolume(Volume);
 }
 
 void MusicPlayer::_ChooseTrack(int Id)
 {
     _Player.stop();
+    CurrentIconPath = "./Icons/play-button.svg";
+    emit IconPathChanged();
+
     fState = States::SongNotStarted;
-    State = 0;
     if (SliderChecker.joinable())
     {
         SliderChecker.join();
     }
-    fSliderMutex.lock();
     _Player.setSource(QUrl("./Music/" + Tracks[Id]));
-    fSliderMutex.unlock();
+    SliderPosition = 0;
+    emit SliderPositionChanged();
 }
 
 
-QStringList MusicPlayer::getTracks() const
-{
-    qDebug() << "getter was called";
-    qDebug() << Tracks.size();
-    return Tracks;
-}
 void MusicPlayer::SetNewSlider()
 {
     using namespace std::literals::chrono_literals;
@@ -114,55 +107,16 @@ void MusicPlayer::SetNewSlider()
     double MediaDuration {static_cast<double>(_Player.duration())};
     qDebug() << MediaDuration << " - media duration";
     fSliderMutex.lock();
-    for (;fState == States::SongPlaying;)
+    for (;fState == States::SongPlaying || fState == States::SongPaused;)
     {
         long long int Current {_Player.position()};
-        qDebug() << "Player.position = " << Current;
+        //qDebug() << "Player.position = " << Current;
         SliderPosition = (Current / MediaDuration);
         //qDebug() << SliderPosition << " - new slider position";
         std::this_thread::sleep_for(0.25s);
         emit SliderPositionChanged();
-    }
-    SliderPosition = 0;
-    emit SliderPositionChanged();
+    }    
     qDebug() << "Slider thread ended";
     fSliderMutex.unlock();
 }
-
-QString MusicPlayer::getCurrentIconPath() const
-{
-    return CurrentIconPath;
-}
-void MusicPlayer::setTracks(const QStringList &newTracks)
-{
-    if (Tracks == newTracks)
-        return;
-    Tracks = newTracks;
-    emit TracksChanged();
-}
-
-double MusicPlayer::getSliderPosition() const
-{
-    return SliderPosition;
-}
-
-void MusicPlayer::setSliderPosition(double newSliderPosition)
-{
-    if (qFuzzyCompare(SliderPosition, newSliderPosition))
-        return;
-    SliderPosition = newSliderPosition;
-    emit SliderPositionChanged();
-}
-
-double MusicPlayer::getVolume() const
-{
-    return Volume;
-}
-
-void MusicPlayer::setVolume(double newVolume)
-{
-    Volume = newVolume;
-    emit VolumeChanged();
-}
-
 
