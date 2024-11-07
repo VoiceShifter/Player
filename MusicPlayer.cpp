@@ -39,9 +39,8 @@ void MusicPlayer::_Play_n_Stop()
         _AudioOutput->setVolume(Volume);
         _Player.play();
         qDebug() << "Song started playing";
-        //qDebug() << _Player.isPlaying();
         State = 2;
-        //SliderChecker = std::thread(&MusicPlayer::SetNewSlider, this);
+        SliderChecker = std::thread(&MusicPlayer::SetNewSlider, this);
 
     }
     else if (State == 2)
@@ -81,8 +80,14 @@ void MusicPlayer::_SetProgress(float NewProgress)
 void MusicPlayer::_ChooseTrack(int Id)
 {
     _Player.stop();
-    _Player.setSource(QUrl("./Music/" + Tracks[Id]));
     State = 0;
+    if (SliderChecker.joinable())
+    {
+        SliderChecker.join();
+    }
+    fSliderMutex.lock();
+    _Player.setSource(QUrl("./Music/" + Tracks[Id]));
+    fSliderMutex.unlock();
 }
 
 
@@ -98,10 +103,11 @@ void MusicPlayer::SetNewSlider()
     //qDebug() << _Player.duration() << " - media duration";
     double MediaDuration {static_cast<double>(_Player.duration())};
     qDebug() << MediaDuration << " - media duration";
+    fSliderMutex.lock();
     for (;State != 0;)
-    {        
+    {
         long long int Current {_Player.position()};
-        qDebug() << Current;
+        qDebug() << "Player.position = " << Current;
         SliderPosition = (Current / MediaDuration);
         //qDebug() << SliderPosition << " - new slider position";
         std::this_thread::sleep_for(0.25s);
@@ -110,6 +116,7 @@ void MusicPlayer::SetNewSlider()
     SliderPosition = 0;
     emit SliderPositionChanged();
     qDebug() << "Slider thread ended";
+    fSliderMutex.unlock();
 }
 void MusicPlayer::setTracks(const QStringList &newTracks)
 {
