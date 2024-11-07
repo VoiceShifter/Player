@@ -31,13 +31,17 @@ void MusicPlayer::_Play_n_Stop()
 {
     if (State == 0)
     {
-        _Player.setSource(QUrl("./Music/Thorn to Liver - Hold on You.mp3"));
+        if(_Player.hasAudio() == false)
+        {
+            qDebug() << "No audio";
+            return;
+        }
         _AudioOutput->setVolume(Volume);
         _Player.play();
         qDebug() << "Song started playing";
         //qDebug() << _Player.isPlaying();
         State = 2;
-        SliderChecker = std::thread(&MusicPlayer::SetNewSlider, this);
+        //SliderChecker = std::thread(&MusicPlayer::SetNewSlider, this);
 
     }
     else if (State == 2)
@@ -74,6 +78,13 @@ void MusicPlayer::_SetProgress(float NewProgress)
     emit SliderPositionChanged();
 }
 
+void MusicPlayer::_ChooseTrack(int Id)
+{
+    _Player.stop();
+    _Player.setSource(QUrl("./Music/" + Tracks[Id]));
+    State = 0;
+}
+
 
 QStringList MusicPlayer::getTracks() const
 {
@@ -87,16 +98,18 @@ void MusicPlayer::SetNewSlider()
     //qDebug() << _Player.duration() << " - media duration";
     double MediaDuration {static_cast<double>(_Player.duration())};
     qDebug() << MediaDuration << " - media duration";
-    for (;;)
+    for (;State != 0;)
     {        
         long long int Current {_Player.position()};
         qDebug() << Current;
         SliderPosition = (Current / MediaDuration);
-        qDebug() << SliderPosition << " - new slider position";
+        //qDebug() << SliderPosition << " - new slider position";
         std::this_thread::sleep_for(0.25s);
         emit SliderPositionChanged();
     }
-
+    SliderPosition = 0;
+    emit SliderPositionChanged();
+    qDebug() << "Slider thread ended";
 }
 void MusicPlayer::setTracks(const QStringList &newTracks)
 {

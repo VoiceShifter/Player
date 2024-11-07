@@ -20,7 +20,9 @@ qt_add_qml_module(appMusicMicroService
             Main.qml
       SOURCES
         MusicPlayer.hpp MusicPlayer.cpp
-        RESOURCES ./Icons/play-button.svg
+      RESOURCES
+            ./Icons/play-button.svg
+            ./Icons/pause-button.svg
 )
 
 

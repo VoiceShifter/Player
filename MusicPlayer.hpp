@@ -9,6 +9,7 @@
 # include <iostream>
 # include <vector>
 # include <thread>
+# include <mutex>
 # include <chrono>
 class MusicPlayer : public QObject
 {
@@ -21,6 +22,7 @@ public:
     Q_INVOKABLE void _Play_n_Stop();
     Q_INVOKABLE void _SetVolume(float);
     Q_INVOKABLE void _SetProgress(float);
+    Q_INVOKABLE void _ChooseTrack(int ID);
     QStringList getTracks() const;    
     void setTracks(const QStringList &newTracks);
     double getSliderPosition() const;
@@ -37,6 +39,7 @@ private:
     double Volume{};
     std::thread SliderChecker;
     void SetNewSlider();
+    std::mutex fSliderMutex;
 
     Q_PROPERTY(QStringList _Tracks READ getTracks WRITE setTracks NOTIFY TracksChanged FINAL)
     Q_PROPERTY(double _SliderPosition READ getSliderPosition WRITE setSliderPosition NOTIFY SliderPositionChanged FINAL)

@@ -17,6 +17,7 @@ Window {
     Rectangle
     {
         id: _Button
+
         color: "#063970"
         anchors.leftMargin: 10
         anchors.topMargin: 10
@@ -34,8 +35,19 @@ Window {
         MouseArea
         {
             anchors.fill: parent
+            property int _State: 0
             onClicked: {
                 _Player._Play_n_Stop()
+                if (_State === 0)
+                {
+                    _PlayButton.source = "./Icons/pause-button.svg"
+                    _State = 1
+                }
+                else
+                {
+                    _PlayButton.source = "./Icons/play-button.svg"
+                    _State = 0
+                }
             }
         }
         anchors.horizontalCenter: parent.horizontalCenter
@@ -51,6 +63,7 @@ Window {
         width: parent.width
         height: parent.height
         model: _Player._Tracks
+        spacing: -1
         delegate:
             Rectangle
             {
@@ -69,6 +82,15 @@ Window {
                     font.pointSize: 12
                     color: "black"
                    }
+                MouseArea
+                {
+                    anchors.fill: parent
+                    onClicked:
+                    {
+                        console.log(index)
+                        _Player._ChooseTrack(index)
+                    }
+                }
             }
     }
     // Rectangle
