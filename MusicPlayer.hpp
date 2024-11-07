@@ -8,6 +8,8 @@
 # include <filesystem>
 # include <iostream>
 # include <vector>
+# include <thread>
+# include <chrono>
 class MusicPlayer : public QObject
 {
     Q_OBJECT
@@ -16,20 +18,34 @@ public:
     ~MusicPlayer();
     QMediaPlayer _Player;
     QAudioOutput* _AudioOutput;
-    Q_INVOKABLE void _PlaySong();
-
-    QStringList getTracks() const;
+    Q_INVOKABLE void _Play_n_Stop();
+    Q_INVOKABLE void _SetVolume(float);
+    Q_INVOKABLE void _SetProgress(float);
+    QStringList getTracks() const;    
     void setTracks(const QStringList &newTracks);
+    double getSliderPosition() const;
+    void setSliderPosition(double newSliderPosition);
+
+    double getVolume() const;
+    void setVolume(double newVolume);
 
 private:
     QStringList Tracks{};
-
-
+    unsigned int State{};
+    qint64 _SongTime{};
+    double SliderPosition{};
+    double Volume{};
+    std::thread SliderChecker;
+    void SetNewSlider();
 
     Q_PROPERTY(QStringList _Tracks READ getTracks WRITE setTracks NOTIFY TracksChanged FINAL)
+    Q_PROPERTY(double _SliderPosition READ getSliderPosition WRITE setSliderPosition NOTIFY SliderPositionChanged FINAL)
+    Q_PROPERTY(double _Volume READ getVolume WRITE setVolume NOTIFY VolumeChanged FINAL)
 
 signals:
     void TracksChanged();
+    void SliderPositionChanged();
+    void VolumeChanged();
 };
 
 #endif // MUSICPLAYER_HPP
