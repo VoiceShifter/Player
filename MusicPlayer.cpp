@@ -110,6 +110,10 @@ void MusicPlayer::_ChangeDirectory(QString NewPath)
         this->Tracks.append(Buffer.substr(CurrentDirectory.size(), Buffer.size()).c_str());
     }
     emit TracksChanged();
+    if (Tracks.size() > 0)
+    {
+        _Player.setSource(CurrentDirectory.c_str() + Tracks[0]);
+    }
 }
 
 

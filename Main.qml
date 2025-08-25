@@ -123,9 +123,6 @@ Window {
 
         highlight: Rectangle
         {
-
-            anchors.right: parent.right
-            width: 1
             color: "lightsteelblue";
             radius: 5
         }
