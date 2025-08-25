@@ -2,7 +2,7 @@ import QtQuick
 import QtLocation
 import QtQuick.Controls
 import com.MusicPlayer
-
+import QtQuick.Dialogs
 Window {
     width: 640
     height: 480
@@ -16,11 +16,36 @@ Window {
     {
         id: _DialogButton
         color: "#063970"
-        width: 50
+        width: _tmp1.width + 10
         height: 40
         radius: 60
-        anchors.left: parent.left
+        anchors.left: _ProgressSlider.left
         anchors.verticalCenter: _Button.verticalCenter
+        Text {
+            id: _tmp1
+            text: qsTr("FOLDER")
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        MouseArea
+        {
+            anchors.fill: parent
+            onClicked:
+            {
+                _ChooseFolder.open()
+                console.log("Dialog opened")
+            }
+        }
+    }
+
+    FolderDialog
+    {
+        id: _ChooseFolder
+        modality: Qt.WindowModal
+        title: "Choose folder"
+        onAccepted: _Player._ChangeDirectory(_ChooseFolder.selectedFolder)
+        onRejected: console.log("Cancel clicked")
+
     }
 
     Rectangle

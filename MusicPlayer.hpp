@@ -23,21 +23,21 @@ class MusicPlayer : public QObject
     Q_OBJECT
 public:
     explicit MusicPlayer(QObject *parent = nullptr);
-    ~MusicPlayer();
     QMediaPlayer _Player;
     QAudioOutput* _AudioOutput;
+
     Q_INVOKABLE void _Play_n_Stop();
     Q_INVOKABLE void _SetVolume(float);
     Q_INVOKABLE void _SetProgress(float);
     Q_INVOKABLE void _ChooseTrack(int ID);
-    QStringList getTracks() const;    
+    Q_INVOKABLE void _ChangeDirectory(QString NewPath);
+
+    QStringList getTracks() const;
     void setTracks(const QStringList &newTracks);
     double getSliderPosition() const;
     void setSliderPosition(double newSliderPosition);
-
     double getVolume() const;
     void setVolume(double newVolume);
-
     QString getCurrentIconPath() const;
 
 private:
@@ -51,14 +51,12 @@ private:
     void SetNewSlider();
     std::mutex fSliderMutex;
     QString CurrentIconPath;
-
-
+    std::string CurrentDirectory;
 
     Q_PROPERTY(QStringList _Tracks READ getTracks WRITE setTracks NOTIFY TracksChanged FINAL)
     Q_PROPERTY(double _SliderPosition READ getSliderPosition WRITE setSliderPosition NOTIFY SliderPositionChanged FINAL)
     Q_PROPERTY(double _Volume READ getVolume WRITE setVolume NOTIFY VolumeChanged FINAL)
     Q_PROPERTY(QString _CurrentIconPath READ getCurrentIconPath NOTIFY IconPathChanged FINAL)
-
 signals:
     void TracksChanged();
     void SliderPositionChanged();
@@ -67,3 +65,4 @@ signals:
 };
 
 #endif // MUSICPLAYER_HPP
+

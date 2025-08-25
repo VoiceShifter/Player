@@ -1,30 +1,29 @@
 #include "MusicPlayer.hpp"
 
-MusicPlayer::~MusicPlayer()
-{
-    delete _AudioOutput;
-}
 MusicPlayer::MusicPlayer(QObject *parent)
-    : QObject{parent}, CurrentIconPath{"./Icons/play-button.svg"}
+    : QObject{parent}, CurrentIconPath{"./Icons/play-button.svg"}, CurrentDirectory{"./Music/"}
 {
-
     _AudioOutput = new QAudioOutput;
     _Player.setAudioOutput(_AudioOutput);
-    for (const auto& Iterator : std::filesystem::directory_iterator("./Music"))
+    for (const auto& Iterator : std::filesystem::directory_iterator(CurrentDirectory))
     {
         qDebug() << Iterator.path().string() << '\n';
         std::string Buffer{Iterator.path().string()};
 
-        this->Tracks.append(Buffer.substr(Buffer.find('\\') + 1, Buffer.size()).c_str());
+        this->Tracks.append(Buffer.substr(Buffer.find('/', 3) + 1, Buffer.size()).c_str());
         //this->Tracks.push_back(Buffer.substr(Buffer.find("\\", Buffer.size() - 1)));
     }
     fState = States::SongNotStarted;
     SliderPosition = 0;
     Volume  = 1;
     _AudioOutput->setVolume(Volume);
+    for (const auto& Iterator : Tracks)
+    {
+        qDebug() << Iterator;
+    }
     if (Tracks.size() > 0)
     {
-        _Player.setSource("./Music/" + Tracks[0]);
+        _Player.setSource(CurrentDirectory.c_str() + Tracks[0]);
     }
 }
 
@@ -83,7 +82,7 @@ void MusicPlayer::_SetProgress(float NewProgress)
     _AudioOutput->setVolume(Volume);
 }
 
-void MusicPlayer::_ChooseTrack(int Id)
+void MusicPlayer::_ChooseTrack(int ID)
 {
     _Player.stop();
     CurrentIconPath = "./Icons/play-button.svg";
@@ -94,9 +93,23 @@ void MusicPlayer::_ChooseTrack(int Id)
     {
         SliderChecker.join();
     }
-    _Player.setSource(QUrl("./Music/" + Tracks[Id]));
+    _Player.setSource(QUrl(CurrentDirectory.c_str() + Tracks[ID]));
     SliderPosition = 0;
     emit SliderPositionChanged();
+}
+
+void MusicPlayer::_ChangeDirectory(QString NewPath)
+{
+    CurrentDirectory = NewPath.toStdString().substr(7, NewPath.size()) + "/";
+    _Player.setSource(QUrl((CurrentDirectory).c_str()));
+    Tracks.clear();
+    for (const auto& Iterator : std::filesystem::directory_iterator(CurrentDirectory))
+    {
+        qDebug() << Iterator.path().string() << '\n';
+        std::string Buffer{Iterator.path().string()};
+        this->Tracks.append(Buffer.substr(CurrentDirectory.size(), Buffer.size()).c_str());
+    }
+    emit TracksChanged();
 }
 
 
@@ -119,4 +132,3 @@ void MusicPlayer::SetNewSlider()
     qDebug() << "Slider thread ended";
     fSliderMutex.unlock();
 }
-

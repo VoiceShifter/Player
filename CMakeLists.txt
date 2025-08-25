@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MusicMicroService VERSION 0.1 LANGUAGES CXX)
 
+add_compile_options(-Wall;-Wextra;-Werror)
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Multimedia Quick)
@@ -29,6 +31,8 @@ qt_add_qml_module(appMusicMicroService
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Thorn\ to\ Liver\ -\ Hold\ on\ You.mp3
       DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Music)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Icons/play-button.svg
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
